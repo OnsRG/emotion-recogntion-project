@@ -4,8 +4,8 @@ import torch
 import torch.nn as nn
 
 
-class JerseyCNN(nn.Module):
-    def __init__(self, num_numbers, dropout):
+class EmotionCNN(nn.Module):
+    def __init__(self, num_emotions, dropout):
         super().__init__()
 
         # Shared conv backbone
@@ -19,15 +19,15 @@ class JerseyCNN(nn.Module):
         flat_dim = 128 * 4 * 4  # 2048
 
         # Head 1 – legibility (binary)
-        self.legibility_head = nn.Sequential(
-            nn.Linear(flat_dim, 256), nn.ReLU(), nn.Dropout(dropout),
-            nn.Linear(256, 2)
-        )
+        #self.legibility_head = nn.Sequential(
+        #    nn.Linear(flat_dim, 256), nn.ReLU(), nn.Dropout(dropout),
+        #    nn.Linear(256, 2)
+        #)
 
-        # Head 2 – jersey number (multi-class)
-        self.number_head = nn.Sequential(
+        # Head 2 – emotion (multi-class)
+        self.emotion_head = nn.Sequential(
             nn.Linear(flat_dim, 256), nn.ReLU(), nn.Dropout(dropout),
-            nn.Linear(256, num_numbers)
+            nn.Linear(256, num_emotions)
         )
 
     def _conv_block(self, in_ch, out_ch):
@@ -40,4 +40,5 @@ class JerseyCNN(nn.Module):
 
     def forward(self, x):
         feats = self.backbone(x).flatten(1)
-        return self.legibility_head(feats), self.number_head(feats)
+        #return self.legibility_head(feats), self.number_head(feats)
+        return self.emotion_head(feats)
