@@ -74,7 +74,7 @@ def train(cfg, model, train_loader, val_loader, device):
         scheduler.step(val_m["loss"])
         current_lr = optimizer.param_groups[0]["lr"]
 
-        history.append({"epoch":epoch,"train_loss":train_m['loss'],"valid_loss":val_m['loss'],"train_acc":train_m['acc'],"val_acc":val_m['acc']})
+        history.append({"epoch":epoch,"train_loss":train_m['loss'],"val_loss":val_m['loss'],"train_acc":train_m['acc'],"val_acc":val_m['acc']})
         
 
         if val_m["loss"] < best_val_loss:
