@@ -18,12 +18,6 @@ class EmotionCNN(nn.Module):
 
         flat_dim = 128 * 4 * 4  # 2048
 
-        # Head 1 – legibility (binary)
-        #self.legibility_head = nn.Sequential(
-        #    nn.Linear(flat_dim, 256), nn.ReLU(), nn.Dropout(dropout),
-        #    nn.Linear(256, 2)
-        #)
-
         # Head 2 – emotion (multi-class)
         self.emotion_head = nn.Sequential(
             nn.Linear(flat_dim, 256), nn.ReLU(), nn.Dropout(dropout),

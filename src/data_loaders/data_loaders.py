@@ -64,8 +64,8 @@ class EmotionDataset(Dataset):
 def get_data_loaders(cfg):
     train_data, valid_data, test_data = load_dataset(cfg["dataset_path"])
 
-    train_ds = EmotionDataset(train_data, cfg["img_size"])
-    valid_ds = EmotionDataset(valid_data, cfg["img_size"])
+    train_ds = EmotionDataset(train_data[:500], cfg["img_size"])
+    valid_ds = EmotionDataset(valid_data[:100], cfg["img_size"])
     test_ds  = EmotionDataset(test_data,  cfg["img_size"])
 
     train_loader = DataLoader(train_ds, batch_size=cfg["batch_size"], shuffle=True,  num_workers=0)
