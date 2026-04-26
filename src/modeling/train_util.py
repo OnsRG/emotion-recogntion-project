@@ -25,8 +25,8 @@ def run_epoch(model, loader, cfg, device, optimizer=None):
 
     ctx = torch.enable_grad() if is_train else torch.no_grad()
     with ctx:
-        #for imgs, labels in tqdm(loader):
-        
+        for imgs, labels in tqdm(loader):
+        #for imgs, labels in loader:
             imgs, labels = imgs.to(device), labels.to(device)
 
             logits = model(imgs)
@@ -63,7 +63,7 @@ def train(cfg, model, train_loader, val_loader, device):
 
     best_val_loss    = float("inf")   # best loss so far (starts very high)
     no_improve_count = 0              # how many epochs without improvement
-    history = {'train':[],'valid':[]}     # stores all metrics
+    history = [] # stores all metrics
     from time import time 
     for epoch in range(1, cfg["epochs"] + 1):
         start = time()
@@ -74,9 +74,7 @@ def train(cfg, model, train_loader, val_loader, device):
         scheduler.step(val_m["loss"])
         current_lr = optimizer.param_groups[0]["lr"]
 
-        history['train'].append(train_m)
-        history['valid'].append(val_m)
-
+        history.append({"epoch":epoch,"train_loss":train_m['loss'],"valid_loss":val_m['loss'],"train_acc":train_m['acc'],"val_acc":val_m['acc']})
         
 
         if val_m["loss"] < best_val_loss:
@@ -99,14 +97,22 @@ def train(cfg, model, train_loader, val_loader, device):
             if no_improve_count >= cfg["early_stop_patience"]:
                 print(f"\nEarly stopping – no improvement for {cfg['early_stop_patience']} epochs.")
                 break
-    duration = time()- start
-    print(
-            f"Epoch {epoch:03d}/{cfg['epochs']}  "
-            f"| train  loss={train_m['loss']:.4f}  acc={train_m['acc']:.3f}  "
-            f"| val    loss={val_m['loss']:.4f}  acc={val_m['acc']:.3f}  "
-            f"| lr={current_lr:.2e} | time ={duration :.2f}s | batch_size={cfg['batch_size']} |"
+        duration = time()- start
+        print(
+                f"Epoch {epoch:03d}/{cfg['epochs']}  "
+                f"| train  loss={train_m['loss']:.4f}  acc={train_m['acc']:.3f}  "
+                f"| val    loss={val_m['loss']:.4f}  acc={val_m['acc']:.3f}  "
+                f"| lr={current_lr:.2e} | time ={duration :.2f}s | batch_size={cfg['batch_size']} |"
             
         )
+    history_path = f"{cfg['save_path']}/history/{cfg['experiment']}.json"
+    config_path = f"{cfg['save_path']}/configs/{cfg['experiment']}.json"
+    plot_path = f"{cfg['save_path']}/plots/{cfg['experiment']}.png"
+    save_json(data=history,json_path=history_path)
+    save_json(data=cfg,json_path=config_path)
+    plot_training_curves(history,plot_path)
+
+    
     return model, history
 
 
@@ -117,23 +123,36 @@ def count_total_parameters(model):
     print("=" * 50)
 
 
-def plot_training_curves(train_history, val_history):
-    epochs  = range(1, len(train_history) + 1)
-    metrics = ["loss", "acc"]
+def plot_training_curves(history, save_path=None):
+    epochs     = [el["epoch"]     for el in history]
+    train_loss = [el["train_loss"] for el in history]
+    val_loss   = [el["val_loss"]   for el in history]
+    train_acc  = [el["train_acc"]  for el in history]
+    val_acc    = [el["val_acc"]    for el in history]
 
-    fig, axes = plt.subplots(1, len(metrics), figsize=(12, 4))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
 
-    for ax, key in zip(axes, metrics):
-        train_vals = [m[key] for m in train_history]
-        val_vals   = [m[key] for m in val_history]
+    # loss plot
+    axes[0].plot(epochs, train_loss, label="train")
+    axes[0].plot(epochs, val_loss,   label="val", linestyle="--")
+    axes[0].set_title("loss")
+    axes[0].set_xlabel("epoch")
+    axes[0].legend()
+    axes[0].grid(True)
 
-        ax.plot(epochs, train_vals, label="train")
-        ax.plot(epochs, val_vals,   label="val", linestyle="--")
-        ax.set_title(key)
-        ax.set_xlabel("epoch")
-        ax.legend()
-        ax.grid(True)
+    # accuracy plot
+    axes[1].plot(epochs, train_acc, label="train")
+    axes[1].plot(epochs, val_acc,   label="val", linestyle="--")
+    axes[1].set_title("acc")
+    axes[1].set_xlabel("epoch")
+    axes[1].legend()
+    axes[1].grid(True)
 
     plt.tight_layout()
-    plt.savefig("training_curves.png", dpi=150)
+
+    if save_path:
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        plt.savefig(save_path, dpi=150)
+        print(f"Plot saved to {save_path}")
+
     plt.show()

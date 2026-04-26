@@ -213,3 +213,4 @@ outputs/
 *.png
 *.txt 
 *.jpg
+*.pt
