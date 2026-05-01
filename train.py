@@ -4,7 +4,7 @@ import sys
 import torch
 from src.data_loaders.data_loaders import get_data_loaders
 from src.modeling.model import EmotionCNN
-from modeling.train_util import train, count_total_parameters
+from src.modeling.train_util import train, count_total_parameters
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -13,7 +13,7 @@ experiment = f"emotion_classifier_run_{run}"
 
 CFG = {
     # --- paths ---
-    "dataset_path" : r"data/YOLO_format",
+    "dataset_path" : "data/YOLO_format",
     "save_dir"     : "checkpoints",
 
     # --- data ---
@@ -24,7 +24,7 @@ CFG = {
     # --- model ---
     "num_emotions" : 8,
     "dropout"      : 0.3,
-    "save_path"    : r"outputs",
+    "save_path"    : "outputs",
     "experiment"   : experiment,
 
     # --- optimiser ---
@@ -37,7 +37,7 @@ CFG = {
     "lr_factor"    : 0.5,
 
     # --- training loop ---
-    "epochs"             : 1,
+    "epochs"             : 20,
     "early_stop_patience": 7,
 }
 

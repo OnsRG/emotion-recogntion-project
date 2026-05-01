@@ -214,3 +214,7 @@ outputs/
 *.txt 
 *.jpg
 *.pt
+.copilot/
+.kaggle/
+.lightning_studio/
+.lightning/
