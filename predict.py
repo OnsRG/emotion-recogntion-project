@@ -2,12 +2,13 @@ import torch
 import cv2
 import matplotlib.pyplot as plt
 from torchvision import transforms
-from src.modeling.model import EmotionCNN
+#from src.modeling.model import EmotionCNN
+from src.modeling.resnet_model import EmotionResNet
 
 
 def predict(image_paths, cfg, class_names):
     # Step 1: Load the saved model
-    model = EmotionCNN(num_emotions=cfg["num_emotions"], dropout=cfg["dropout"]).to(cfg["device"])
+    model = EmotionResNet(num_emotions=cfg["num_emotions"], dropout=cfg["dropout"]).to(cfg["device"])
     checkpoint = torch.load(
         f"{cfg['save_path']}/weights/{cfg['experiment']}.pt",
         map_location=cfg["device"]
@@ -46,7 +47,7 @@ def predict(image_paths, cfg, class_names):
 
     plt.suptitle("Emotion Predictions on New Images", fontsize=14)
     plt.tight_layout()
-    plt.savefig(f"{cfg['save_path']}/plots/predictions.png")
+    plt.savefig(f"{cfg['save_path']}/plots/predictions_ResNet.png")
     plt.show()
 
 
@@ -66,11 +67,11 @@ image_paths = [
 device = "cuda" if torch.cuda.is_available() else "cpu"
 CFG = {
     "num_emotions": 8,
-    "dropout"     : 0.3,
+    "dropout"     : 0.6,
     "device"      : device,
     "save_path"   : "outputs",
-    "experiment"  : "emotion_classifier_run_0",
-    "img_size"    : 96,
+    "experiment"  : "emotion_classifier_run_4",
+    "img_size"    : 224,  # ResNet native size
 }
 
 class_names = ['Anger','Contempt','Disgust','Fear',

@@ -9,7 +9,7 @@ from src.modeling.train_util import train, count_total_parameters
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-run = 3
+run = 4
 experiment = f"emotion_classifier_run_{run}"
 
 CFG = {
@@ -24,22 +24,22 @@ CFG = {
 
     # --- model ---
     "num_emotions" : 8,
-    "dropout"      : 0.3,
+    "dropout"      : 0.6,
     "save_path"    : "outputs",
     "experiment"   : experiment,
 
     # --- optimiser ---
     "lr"           : 1e-4,
-    "weight_decay" : 1e-4,
-    "batch_size"   : 42,
+    "weight_decay" : 1e-3,
+    "batch_size"   : 64,
 
     # --- scheduler (ReduceLROnPlateau) ---
-    "lr_patience"  : 3,
+    "lr_patience"  : 5,
     "lr_factor"    : 0.5,
 
     # --- training loop ---
-    "epochs"             : 20,
-    "early_stop_patience": 7,
+    "epochs"             : 30,
+    "early_stop_patience": 10,
 }
 
 #load the data 
@@ -48,4 +48,5 @@ train_loader, valid_loader, test_loader = get_data_loaders(CFG)
 #model = EmotionCNN(num_emotions=CFG["num_emotions"], dropout=CFG["dropout"]).to(CFG['device'])
 model = EmotionResNet(num_emotions=CFG["num_emotions"], dropout=CFG["dropout"]).to(CFG['device'])
 count_total_parameters(model)
+
 model, history = train(cfg=CFG, model=model, train_loader=train_loader, val_loader=valid_loader, device=CFG['device'])

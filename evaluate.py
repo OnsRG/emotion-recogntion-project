@@ -69,7 +69,7 @@ def evaluate(cfg, class_names):
 
 # ── Run ────────────────────────────────────────────────────────────────────────
 device = "cuda" if torch.cuda.is_available() else "cpu"
-run = 3
+run = 4
 
 experiment = f"emotion_classifier_run_{run}"
 
@@ -80,16 +80,16 @@ CFG = {
     "num_workers"        : 0,
     "device"             : device,
     "num_emotions"       : 8,
-    "dropout"            : 0.3,
+    "dropout"            : 0.6,
     "save_path"          : "outputs",
     "experiment"         : experiment,
-    "lr"                 : 1e-3,
-    "weight_decay"       : 1e-4,
-    "batch_size"         : 42,
-    "lr_patience"        : 3,
+    "lr"                 : 1e-4,
+    "weight_decay"       : 1e-3,
+    "batch_size"         : 64,
+    "lr_patience"        : 5,
     "lr_factor"          : 0.5,
     "epochs"             : 30,
-    "early_stop_patience": 7,
+    "early_stop_patience": 10,
 }
 
 class_names = ['Anger', 'Contempt', 'Disgust', 'Fear',

@@ -8,10 +8,10 @@ class EmotionResNet(nn.Module):
         super().__init__()
         self.model = models.resnet50(weights="IMAGENET1K_V1")
 
-        # Freeze only early layers (layer1, layer2), fine-tune the rest
-        freeze_layers = ["layer1", "layer2", "conv1", "bn1"]
+        # Freeze stem + layer1 + layer2 + layer3, train only layer4 + head
+        freeze = ["conv1", "bn1", "layer1", "layer2", "layer3"]
         for name, param in self.model.named_parameters():
-            if any(name.startswith(l) for l in freeze_layers):
+            if any(name.startswith(l) for l in freeze):
                 param.requires_grad = False
 
         # Better head with BatchNorm
@@ -20,11 +20,11 @@ class EmotionResNet(nn.Module):
             nn.Linear(in_features, 512),
             nn.BatchNorm1d(512),
             nn.ReLU(),
-            nn.Dropout(dropout),
+            nn.Dropout(dropout), 
             nn.Linear(512, 256),
             nn.BatchNorm1d(256),
             nn.ReLU(),
-            nn.Dropout(dropout / 2),
+            nn.Dropout(dropout / 2), 
             nn.Linear(256, num_emotions)
         )
 
