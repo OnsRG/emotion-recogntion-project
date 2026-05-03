@@ -3,12 +3,13 @@ import sys
 
 import torch
 from src.data_loaders.data_loaders import get_data_loaders
-from src.modeling.model import EmotionCNN
+#from src.modeling.model import EmotionCNN
+from src.modeling.resnet_model import EmotionResNet
 from src.modeling.train_util import train, count_total_parameters
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-run = 0
+run = 3
 experiment = f"emotion_classifier_run_{run}"
 
 CFG = {
@@ -17,7 +18,7 @@ CFG = {
     "save_dir"     : "checkpoints",
 
     # --- data ---
-    "img_size"     : 96,
+    "img_size"     : 224,  # ResNet native size
     "num_workers"  : 0,
     "device"       : device,
 
@@ -28,7 +29,7 @@ CFG = {
     "experiment"   : experiment,
 
     # --- optimiser ---
-    "lr"           : 1e-3,
+    "lr"           : 1e-4,
     "weight_decay" : 1e-4,
     "batch_size"   : 42,
 
@@ -44,8 +45,7 @@ CFG = {
 #load the data 
 train_loader, valid_loader, test_loader = get_data_loaders(CFG)
 
-model = EmotionCNN(num_emotions=CFG["num_emotions"], dropout=CFG["dropout"]).to(CFG['device'])
+#model = EmotionCNN(num_emotions=CFG["num_emotions"], dropout=CFG["dropout"]).to(CFG['device'])
+model = EmotionResNet(num_emotions=CFG["num_emotions"], dropout=CFG["dropout"]).to(CFG['device'])
 count_total_parameters(model)
 model, history = train(cfg=CFG, model=model, train_loader=train_loader, val_loader=valid_loader, device=CFG['device'])
-
-

@@ -8,12 +8,11 @@ class EmotionCNN(nn.Module):
     def __init__(self, num_emotions, dropout):
         super().__init__()
 
-        # Shared conv backbone
         self.backbone = nn.Sequential(
-            self._conv_block(3,   32),    # -> (B, 32,  H/2,  W/2)
-            self._conv_block(32,  64),    # -> (B, 64,  H/4,  W/4)
-            self._conv_block(64, 128),    # -> (B, 128, H/8,  W/8)
-            nn.AdaptiveAvgPool2d((4, 4))  # -> (B, 128, 4,    4)
+        self._conv_block(3,   32),    # -> (B, 32,  H/2,  W/2)
+        self._conv_block(32,  64),    # -> (B, 64,  H/4,  W/4)
+        self._conv_block(64, 128),    # -> (B, 128, H/8,  W/8)
+        nn.AdaptiveAvgPool2d((4, 4))  # -> (B, 128, 4,    4)
         )
 
         flat_dim = 128 * 4 * 4  # 2048

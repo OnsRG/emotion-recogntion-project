@@ -48,3 +48,32 @@ def predict(image_paths, cfg, class_names):
     plt.tight_layout()
     plt.savefig(f"{cfg['save_path']}/plots/predictions.png")
     plt.show()
+
+
+image_paths = [
+    "test_images/angry-face.png",
+    "test_images/contempt-face.png",
+    "test_images/disgust-face.jpg",
+    "test_images/face-fear.jpg",
+    "test_images/happy-face.png",
+    "test_images/neutral-face.png",
+    "test_images/sad-face.png",
+    "test_images/surprise-face.jpg",
+    "test_images/neutral-face1.jpg",
+    "test_images/happy-face1.png",
+]
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+CFG = {
+    "num_emotions": 8,
+    "dropout"     : 0.3,
+    "device"      : device,
+    "save_path"   : "outputs",
+    "experiment"  : "emotion_classifier_run_0",
+    "img_size"    : 96,
+}
+
+class_names = ['Anger','Contempt','Disgust','Fear',
+               'Happy','Neutral','Sad','Surprise']
+
+predict(image_paths, CFG, class_names)    
