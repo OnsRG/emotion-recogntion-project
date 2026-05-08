@@ -8,6 +8,8 @@ import plotly.graph_objects as go
 import matplotlib.cm as cm
 from torchvision import transforms, models
 from PIL import Image
+from src.modeling.model import EmotionCNN
+from src.modeling.resnet_model import EmotionResNet
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 CLASS_NAMES = ['Anger', 'Contempt', 'Disgust', 'Fear',
@@ -26,49 +28,11 @@ EMOTION_EMOJIS = {
 }
 
 BEST = {
-    "EmotionCNN":    {"weights": "outputs/weights/emotion_classifier_run_0.pt", "img_size": 96},
-    "EmotionResNet": {"weights": "outputs/weights/emotion_classifier_run_4.pt", "img_size": 224},
+    "EmotionCNN":    {"weights": "outputs/weights/emotion_classifier_run_1.pt", "img_size": 112},
+    "EmotionResNet": {"weights": "outputs/weights/emotion_classifier_run_5.pt", "img_size": 224},
     "YOLO":          {"weights": "runs/detect/outputs/yolo/emotion_yolo_run_0/weights/best.pt", "img_size": 96},
 }
 
-# ── Model definitions ──────────────────────────────────────────────────────────
-class EmotionCNN(nn.Module):
-    def __init__(self, num_emotions=8, dropout=0.3):
-        super().__init__()
-        self.backbone = nn.Sequential(
-            self._conv_block(3,   32),
-            self._conv_block(32,  64),
-            self._conv_block(64, 128),
-            nn.AdaptiveAvgPool2d((4, 4))
-        )
-        self.emotion_head = nn.Sequential(
-            nn.Linear(128 * 4 * 4, 256), nn.ReLU(), nn.Dropout(dropout),
-            nn.Linear(256, num_emotions)
-        )
-
-    def _conv_block(self, in_ch, out_ch):
-        return nn.Sequential(
-            nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1),
-            nn.BatchNorm2d(out_ch), nn.ReLU(), nn.MaxPool2d(2),
-        )
-
-    def forward(self, x):
-        return self.emotion_head(self.backbone(x).flatten(1))
-
-
-class EmotionResNet(nn.Module):
-    def __init__(self, num_emotions=8, dropout=0.3):
-        super().__init__()
-        self.model = models.resnet50(weights=None)
-        in_features = self.model.fc.in_features
-        self.model.fc = nn.Sequential(
-            nn.Linear(in_features, 512), nn.BatchNorm1d(512), nn.ReLU(), nn.Dropout(dropout),
-            nn.Linear(512, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Dropout(dropout / 2),
-            nn.Linear(256, num_emotions)
-        )
-
-    def forward(self, x):
-        return self.model(x)
 
 
 # ── Grad-CAM ───────────────────────────────────────────────────────────────────
@@ -125,7 +89,7 @@ def overlay_heatmap(image: Image.Image, cam: np.ndarray, alpha=0.38) -> Image.Im
 @st.cache_resource
 def load_pytorch_model(model_type, weights_path):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model  = EmotionCNN() if model_type == "EmotionCNN" else EmotionResNet()
+    model  = EmotionCNN() if model_type == "EmotionCNN" else EmotionResNet(num_emotions=8, dropout=0.5)
     loaded = False
     if os.path.exists(weights_path):
         ckpt = torch.load(weights_path, map_location=device)
