@@ -9,18 +9,19 @@ class EmotionCNN(nn.Module):
         super().__init__()
 
         self.backbone = nn.Sequential(
-        self._conv_block(3,   32),    # -> (B, 32,  H/2,  W/2)
-        self._conv_block(32,  64),    # -> (B, 64,  H/4,  W/4)
-        self._conv_block(64, 128),    # -> (B, 128, H/8,  W/8)
-        nn.AdaptiveAvgPool2d((4, 4))  # -> (B, 128, 4,    4)
+            self._conv_block(3,   32),   # 112 → 56
+            self._conv_block(32,  64),   # 56  → 28
+            self._conv_block(64,  128),  # 28  → 14
+            self._conv_block(128, 256),  # 14  → 7  ← NEW
+            nn.AdaptiveAvgPool2d((3, 3)) # 7   → 3×3 (less aggressive)
         )
 
-        flat_dim = 128 * 4 * 4  # 2048
+        flat_dim = 256 * 3 * 3  # 2304
 
-        # Head 2 – emotion (multi-class)
         self.emotion_head = nn.Sequential(
-            nn.Linear(flat_dim, 256), nn.ReLU(), nn.Dropout(dropout),
-            nn.Linear(256, num_emotions)
+            nn.Linear(flat_dim, 512), nn.BatchNorm1d(512), nn.ReLU(), nn.Dropout(dropout),
+            nn.Linear(512, 128),      nn.BatchNorm1d(128), nn.ReLU(), nn.Dropout(dropout / 2),
+            nn.Linear(128, num_emotions)
         )
 
     def _conv_block(self, in_ch, out_ch):

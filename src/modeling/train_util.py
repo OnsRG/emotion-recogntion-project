@@ -17,7 +17,7 @@ def run_epoch(model, loader, cfg, device, optimizer=None):
     is_train = optimizer is not None
     model.train() if is_train else model.eval()
 
-    loss_fn  = nn.CrossEntropyLoss()
+    loss_fn  = nn.CrossEntropyLoss(label_smoothing=0.1)
 
     total_loss = 0.0
     correct = 0

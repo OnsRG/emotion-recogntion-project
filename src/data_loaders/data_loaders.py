@@ -36,7 +36,7 @@ def load_dataset(dataset_path):
 
 # ── 2. Dataset class ───────────────────────────────────────────────────────────
 class EmotionDataset(Dataset):
-    def __init__(self, samples, img_size, transform=None):
+    def __init__(self, samples, transform=None):
         self.samples = samples
 
         # Use passed-in transform if provided, otherwise fall back to plain resize
@@ -45,7 +45,6 @@ class EmotionDataset(Dataset):
         else:
             self.transform = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Resize((img_size, img_size)),
                 transforms.Normalize([0.485, 0.456, 0.406],
                                      [0.229, 0.224, 0.225]),
             ])
@@ -58,6 +57,9 @@ class EmotionDataset(Dataset):
 
         # cv2 reads BGR → convert to RGB → convert to PIL for torchvision transforms
         img_bgr = cv2.imread(item["image_path"])
+        if img_bgr is None:
+            raise FileNotFoundError(f"Could not read image: {item['image_path']}")
+
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
         img     = Image.fromarray(img_rgb)      # ← convert to PIL Image
 
@@ -86,28 +88,31 @@ class EmotionDataset(Dataset):
 
 def get_data_loaders(cfg):
     train_data, valid_data, test_data = load_dataset(cfg["dataset_path"])
+    
+    size = cfg["img_size"]  # 112 for baseline, 224 for ResNet
 
     train_transform = transforms.Compose([
-        transforms.Resize((256, 256)),
-        transforms.RandomCrop(224),
+        transforms.Resize((int(size * 1.14), int(size * 1.14))),  # e.g. 256 for ResNet
+        transforms.RandomCrop(size),
         transforms.RandomHorizontalFlip(),
         transforms.RandomRotation(20),
         transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.3, hue=0.1),
         transforms.RandomGrayscale(p=0.1),
+        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         transforms.RandomErasing(p=0.3, scale=(0.02, 0.2)),
     ])
 
     val_transform = transforms.Compose([
-        transforms.Resize((224, 224)),
+        transforms.Resize((size, size)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])
 
-    train_ds = EmotionDataset(train_data, cfg["img_size"], transform=train_transform)
-    valid_ds = EmotionDataset(valid_data, cfg["img_size"], transform=val_transform)
-    test_ds  = EmotionDataset(test_data,  cfg["img_size"], transform=val_transform)
+    train_ds = EmotionDataset(train_data, transform=train_transform)
+    valid_ds = EmotionDataset(valid_data, transform=val_transform)
+    test_ds  = EmotionDataset(test_data,  transform=val_transform)
 
     train_loader = DataLoader(train_ds, batch_size=cfg["batch_size"], shuffle=True,
                               num_workers=cfg["num_workers"], pin_memory=True)

@@ -8,8 +8,8 @@ class EmotionResNet(nn.Module):
         super().__init__()
         self.model = models.resnet50(weights="IMAGENET1K_V1")
 
-        # Freeze stem + layer1 + layer2 + layer3, train only layer4 + head
-        freeze = ["conv1", "bn1", "layer1", "layer2", "layer3"]
+        
+        freeze = ["conv1", "bn1", "layer1"]
         for name, param in self.model.named_parameters():
             if any(name.startswith(l) for l in freeze):
                 param.requires_grad = False
